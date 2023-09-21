@@ -13,19 +13,27 @@
 #include <Joystick.h>
 #include <Encoder.h>
 
-Encoder myEnc(3,4);
+const int encoder_pin1 = 3;
+const int encoder_pin2 = 4;
+const int tri_button_pin_0 = 5;
+const int push_button_pin_offset = 6;
+
+const int potentiometer_pin = A0;
+
+const int num_buttons = 9;
+
+Encoder myEnc(encoder_pin1, encoder_pin2);
+
 
 void setup() {
   // Initialize Button Pins
-  pinMode(3, INPUT_PULLUP);
-  pinMode(4, INPUT_PULLUP);
-  pinMode(6, INPUT_PULLUP);
-  pinMode(7, INPUT_PULLUP);
-  pinMode(8, INPUT_PULLUP);
-  pinMode(9, INPUT_PULLUP);
-  pinMode(10, INPUT_PULLUP);
-  pinMode(11, INPUT_PULLUP);
-  pinMode(12, INPUT_PULLUP);
+  pinMode(tri_button_pin_0, INPUT_PULLUP);
+  pinMode(tri_button_pin_1, INPUT_PULLUP);
+  pinMode(tri_button_pin_2, INPUT_PULLUP);
+
+  for (int i = 0; i < num_buttons; ++i) {
+    pinMode(push_button_pin_offset + i, INPUT_PULLUP);
+  }
   // Initialize Joystick Library
   Joystick.begin();
 
@@ -34,18 +42,15 @@ void setup() {
   Serial.begin(9600);
 }
 
-// Constant that maps the phyical pin to the joystick button.
-const int pinToButtonMap = 6;
-
 // Last state of the button
-int lastButtonState[7] = {0,0,0,0};
+int lastButtonState[num_buttons] = {};
 
 void loop() {
 
   // Read pin values
-  for (int index = 0; index < 7; index++)
+  for (int index = 0; index < num_buttons; index++)
   {
-    int currentButtonState = !digitalRead(index + pinToButtonMap);
+    int currentButtonState = !digitalRead(index + push_button_pin_offset);
     if (currentButtonState != lastButtonState[index])
     {
       Joystick.setButton(index, currentButtonState);
@@ -53,7 +58,7 @@ void loop() {
     }
   }
 
-  int sensorValue = analogRead(A0);
+  int sensorValue = analogRead(potential);
   Serial.println(sensorValue);
   Joystick.setThrottle(sensorValue/4);
   Joystick.setXAxisRotation(myEnc.read());
