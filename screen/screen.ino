@@ -2,6 +2,10 @@
  * Rui Santos 
  * Complete Project Details https://randomnerdtutorials.com
  */
+ #include <Encoder.h>
+
+const int encoder_pin1 = 3;
+const int encoder_pin2 = 4;
 
 // include TFT and SPI libraries
 #include <TFT.h>  
@@ -14,32 +18,68 @@
 
 
 // create an instance of the library
-TFT TFTscreen = TFT(cs, dc, rst);
+TFT screen = TFT(cs, dc, rst);
+
+Encoder myEnc(encoder_pin1, encoder_pin2);
 
 void setup() {
 
   //initialize the library
-  TFTscreen.begin();
+  screen.begin();
 
   // clear the screen with a black background
-  TFTscreen.background(0, 0, 0);
+  screen.background(0, 0, 255);
   //set the text size
-  TFTscreen.setTextSize(2);
+  screen.setTextSize(2);
+
+  Serial.begin(9600);
+
+    // set a random font color
+  screen.stroke(255, 255, 255);
+
 }
 
+  int lastValue = -1;
+  int lastWidth = 0;
 void loop() {
 
-  //generate a random color
-  int redRandom = random(0, 255);
-  int greenRandom = random (0, 255);
-  int blueRandom = random (0, 255);
+  int value = myEnc.read();
+  if(lastValue != value) {
+    value = value < -320? -320 : value;
+    value = value > 320? 320 : value;
+    myEnc.write(value);
+    int width = value/4;
+    if (lastWidth != width) {
+    char text[80];
+    sprintf(text, "%d", value);
+    Serial.println(text);
+    screen.stroke(0, 0, 0);
+    screen.fill(0, 0, 0);
+    screen.rect(6, 57, 48, 14);
+    screen.stroke(255, 255, 255);
 
-  // set a random font color
-  TFTscreen.stroke(redRandom, greenRandom, blueRandom);
-  
-  // print Hello, World! in the middle of the screen
-  TFTscreen.text("Hello, World!", 6, 57);
+    // print Hello, World! in the middle of the screen
+    screen.text(text, 6, 57);
+
+    screen.fill(0, 0, 0);
+    screen.stroke(0, 0, 0);
+    screen.rect(0, 0, 160, 10);
+    screen.fill(255, 255, 255);
+    screen.stroke(255, 255, 255);
+    if (width < 0) {
+    screen.rect(80 + width, 0, abs(width), 10);
+    }
+    else {
+    screen.rect(80, 0, width, 10);
+    }
+    }
+    lastWidth = width;
+  }
+
+  lastValue = value;
+
+
   
   // wait 200 miliseconds until change to next color
-  delay(200);
+  // delay(200);
 }
