@@ -54,23 +54,40 @@ class PacketDecoder:
         return packets
 
 decoder = PacketDecoder()
+controlMsgSequence = 0
+statusMsgRecvCount = 0
+
 while True:
     if arduino.is_open and arduino.in_waiting > 0:
         packets = decoder.consume(arduino.read(arduino.in_waiting))
         for packet in packets:
             try:
                 # unpack the message
-                messageType, sequence, buttonState, encoder0Value, encoder1Value, msgCrc = \
-                    struct.unpack('>HHHhhH', packet)
+                messageType, sequence, controlMsgRecvCount, buttonState, encoder0Value, encoder1Value, msgCrc = \
+                    struct.unpack('>HHHHhhH', packet)
 
                 # confirm CRC matches payload
                 payloadCrc = calculator.checksum(bytes(packet[:-2]))
                 if payloadCrc == msgCrc:
                     # TODO got an ButtonReportMsg; process it
-                    print(f'0x{messageType:02X}: {sequence} {buttonState} {encoder0Value} {encoder1Value}')
+                    print(f'0x{messageType:02X}: {sequence} {controlMsgRecvCount} {buttonState} {encoder0Value} {encoder1Value}')
+                    statusMsgRecvCount += 1
             except:
                 # failed to decode the message
                 pass
 
-    # target 50hz
-    time.sleep(0.02)
+        # craft and send control message
+        controlMsg = struct.pack('>HHHHH', 0x4242, controlMsgSequence, statusMsgRecvCount, 0, 0)
+        controlMsgSequence += 1
+
+        # create CRC of contents
+        checksum = struct.pack('>H', calculator.checksum(controlMsg))
+
+        # encode cobs message and append null
+        buffer = cobs.encode(controlMsg + checksum) + bytes([0])
+
+        # send to remote
+        arduino.write(buffer)
+
+    # target 100hz (waits on 50hz message from Arduino)
+    time.sleep(0.01)

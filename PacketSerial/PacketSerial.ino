@@ -6,6 +6,7 @@
 struct ButtonReportMsg {
   uint16_t messageType;
   uint16_t sequence;
+  uint16_t controlMsgRecvCount;
   uint16_t buttonState;
   int16_t encoder0Value;
   int16_t encoder1Value;
@@ -15,6 +16,7 @@ struct ButtonReportMsg {
 struct ButtonControlMsg {
   uint16_t messageType;
   uint16_t sequence;
+  uint16_t reportMsgRecvCount;
   uint16_t buttonLeds;
   uint16_t flags;
 };
@@ -33,6 +35,7 @@ struct ButtonControlMsg {
 void ByteSwap(ButtonReportMsg *msg) {
   msg->messageType = BYTE_SWAP_16(msg->messageType);
   msg->sequence = BYTE_SWAP_16(msg->sequence);
+  msg->controlMsgRecvCount = BYTE_SWAP_16(msg->controlMsgRecvCount);
   msg->buttonState = BYTE_SWAP_16(msg->buttonState);
   msg->encoder0Value = BYTE_SWAP_16(msg->encoder0Value);
   msg->encoder1Value = BYTE_SWAP_16(msg->encoder1Value);
@@ -41,6 +44,7 @@ void ByteSwap(ButtonReportMsg *msg) {
 void ByteSwap(ButtonControlMsg *msg) {
   msg->messageType = BYTE_SWAP_16(msg->messageType);
   msg->sequence = BYTE_SWAP_16(msg->sequence);
+  msg->reportMsgRecvCount = BYTE_SWAP_16(msg->reportMsgRecvCount);
   msg->buttonLeds = BYTE_SWAP_16(msg->buttonLeds);
   msg->flags = BYTE_SWAP_16(msg->flags);
 }
@@ -48,7 +52,8 @@ void ByteSwap(ButtonControlMsg *msg) {
 // State
 PacketSerial cobsSerial;
 ButtonControlMsg controlMsg = {};
-bool receivedControlMsg = true;
+uint16_t controlMsgRecvCount = 0;
+uint16_t reportMsgSequence = 0;
 
 void setup()
 {
@@ -59,15 +64,15 @@ void setup()
 void loop()
 {
   // Update serial and decode any message(s). If a ButtonControlMsg is
-  // recieved this flag will be set to true.
-  receivedControlMsg = false;
+  // recieved then this count will be updated.
+  uint16_t currentControlMsgCount = controlMsgRecvCount;
   cobsSerial.update();
   if (cobsSerial.overflow()) {
     // byte(s) slipped: increment counter
   }
 
   // If an ButtonControlMsg was received then the latest will be in controlMsg.
-  if (receivedControlMsg) {
+  if (currentControlMsgCount != controlMsgRecvCount) {
     processControlMsg(&controlMsg);
   }
 
@@ -96,9 +101,9 @@ void loop()
 
 void buildReportMsg(ButtonReportMsg *msg) {
   // TODO
-  static uint16_t sequence = 0;
   msg->messageType = BUTTON_REPORT_MSG;
-  msg->sequence = sequence++;
+  msg->sequence = reportMsgSequence++;
+  msg->controlMsgRecvCount = controlMsgRecvCount;
   msg->buttonState = 0;
   msg->encoder0Value = 0;
   msg->encoder1Value = 0;
@@ -106,14 +111,16 @@ void buildReportMsg(ButtonReportMsg *msg) {
 
 void processControlMsg(const ButtonControlMsg *msg) {
   // TODO
+  // msg->messageType
   // msg->sequence
+  // msg->reportMsgRecvCount
   // msg->buttonLeds
   // msg->flags
 }
 
 void onButtonControlMsg(const ButtonControlMsg *msg) {
   memcpy(&controlMsg, msg, sizeof(ButtonControlMsg));
-  receivedControlMsg = true;
+  controlMsgRecvCount++;
 }
 
 void onPacketReceived(const uint8_t* buffer, size_t size)
