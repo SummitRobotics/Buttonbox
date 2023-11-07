@@ -3,7 +3,7 @@
 
 const int encoder_pin1 = 3;
 const int encoder_pin2 = 4;
-const int tri_button_pin_0 = 5;
+// const int tri_button_pin_0 = 5;
 const int push_button_pin_offset = 6;
 
 const int potentiometer_pin = A0;
@@ -15,9 +15,9 @@ Encoder myEnc(encoder_pin1, encoder_pin2);
 
 void setup() {
   // Initialize Button Pins
-  pinMode(tri_button_pin_0, INPUT_PULLUP);
-  pinMode(tri_button_pin_1, INPUT_PULLUP);
-  pinMode(tri_button_pin_2, INPUT_PULLUP);
+  // pinMode(tri_button_pin_0, INPUT_PULLUP);
+  // pinMode(tri_button_pin_1, INPUT_PULLUP);
+  // pinMode(tri_button_pin_2, INPUT_PULLUP);
 
   for (int i = 0; i < num_buttons; ++i) {
     pinMode(push_button_pin_offset + i, INPUT_PULLUP);
@@ -44,7 +44,7 @@ void loop() {
     }
   }
 
-  int sensorValue = analogRead(potential);
+  int sensorValue = analogRead(potentiometer_pin);
   Joystick.setThrottle(sensorValue/4);
   Joystick.setXAxisRotation(myEnc.read());
 
