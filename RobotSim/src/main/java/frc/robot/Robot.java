@@ -16,6 +16,11 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+
 import java.util.List;
 
 public class Robot extends TimedRobot {
@@ -30,7 +35,12 @@ public class Robot extends TimedRobot {
   private final RamseteController m_ramsete = new RamseteController();
   private final Timer m_timer = new Timer();
   private Trajectory m_trajectory;
-  Joystick joystick = new Joystick(0);
+  
+  // Joystick joystick = new Joystick(0);
+  CommandJoystick joystick = new CommandJoystick(0);
+  Trigger button1 = joystick.button(1).onTrue(new InstantCommand(() -> {
+      System.out.println("*** Button Pressed!");
+  }).ignoringDisable(true));
   
   @Override
   public void robotInit() {
@@ -45,9 +55,13 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     m_drive.periodic();
-    if (joystick.getRawButtonPressed(1)) {
-      System.out.println("YES!");
+    // if (joystick.getRawButtonPressed(1)) {
+    //   System.out.println("RAW BUTTON PRESSED!");
+    // }
+    if (joystick.getHID().getRawButton(1)) {
+      System.out.println("RAW BUTTON PRESSED!");
     }
+
   }
 
   @Override
