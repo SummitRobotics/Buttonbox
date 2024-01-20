@@ -9,8 +9,8 @@ const int push_button_pin_offset = 6;
 const int potentiometer_pin = A0;
 
 const int num_buttons = 15;
-
 Encoder myEnc(encoder_pin1, encoder_pin2);
+
 
 
 void setup() {
@@ -45,7 +45,7 @@ void loop() {
   }
 
   int sensorValue = analogRead(potentiometer_pin);
-  Joystick.setThrottle(sensorValue/4);
+  // Joystick.setThrottle(sensorValue/4);
   Joystick.setXAxisRotation(myEnc.read());
 
   // Serial.println(sensorValue);
