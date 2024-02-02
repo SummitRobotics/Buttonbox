@@ -1,5 +1,6 @@
-#include <Joystick.h>
 #include <Encoder.h>
+#include <Joystick.h>
+
 
 // Pin Layout
 #define ENCODER_1_PIN_1 3
@@ -29,8 +30,7 @@
 Encoder enc1(ENCODER_1_PIN_1, ENCODER_1_PIN_2);
 Encoder enc2(ENCODER_2_PIN_1, ENCODER_2_PIN_1);
 
-void setup()
-{
+void setup() {
   // Initialize all output pins and drive LOW.
   pinMode(BUTTON_LED_1, OUTPUT);
   pinMode(BUTTON_LED_2, OUTPUT);
@@ -57,41 +57,29 @@ void setup()
 }
 
 // button values will most likely be different this is just a template
-int near(int val, int ref, int dist = 4)
-{
-  return abs(val - ref) <= dist;
-}
+int near(int val, int ref, int dist = 4) { return abs(val - ref) <= dist; }
 
 // int near2(int val2, int ref, int dist = 2) {
 //   return abs(val2 - ref) <= dist;
 // }
 
 /*
- * This function reads the given analog pin and converts to a 3-bit digital value.
+ * This function reads the given analog pin and converts to a 3-bit digital
+ * value.
  */
-int readLadderPin(int pin)
-{
+int left_row_ladder_table[8] = { 0, 515, 616, 682, 770, 820, 829, 879 };
+
+int readLadderPin(int pin, int num_entries, int table[]) {
   int val = analogRead(pin);
-  // Serial.println(val);
-  if (near(val, 685))
-    return 1;
-  if (near(val, 617))
-    return 2;
-  if (near(val, 821))
-    return 3;
-  if (near(val, 512))
-    return 4;
-  if (near(val, 831))
-    return 5;
-  if (near(val, 770))
-    return 6;
-  if (near(val, 897))
-    return 7;
-  return 0;
+  for (int i = 0; i < num_entries; ++i) {
+    if (near(val, table[i])) {
+      return i;
+    }
+  }
+  return 0; // return default as nothing
 }
 
-void loop()
-{
+void loop() {
 
   // int val2 = analogRead(A2);
   // if (near(val2, 176))  {
@@ -130,21 +118,23 @@ void loop()
 
   // int camel = analogRead(A2);
   // Serial.println(camel);
+  Serial.println(
+      readLadderPin(LEFT_COLUMN_BUTTON_LADDER, 8, left_row_ladder_table));
 
-  int ladder1 = readLadderPin(A3);
-  Joystick.setButton(0, ladder1 & 0x1);
-  Joystick.setButton(1, ladder1 & 0x2);
-  Joystick.setButton(2, ladder1 & 0x4);
+  // int ladder1 = readLadderPin(A3);
+  // Joystick.setButton(0, ladder1 & 0x1);
+  // Joystick.setButton(1, ladder1 & 0x2);
+  // Joystick.setButton(2, ladder1 & 0x4);
 
-  int ladder2 = readLadderPin(A4);
-  Joystick.setButton(3, ladder2 & 0x1);
-  Joystick.setButton(4, ladder2 & 0x2);
-  Joystick.setButton(5, ladder2 & 0x4);
+  // int ladder2 = readLadderPin(A4);
+  // Joystick.setButton(3, ladder2 & 0x1);
+  // Joystick.setButton(4, ladder2 & 0x2);
+  // Joystick.setButton(5, ladder2 & 0x4);
 
-  int ladder3 = readLadderPin(A5);
-  Joystick.setButton(6, ladder3 & 0x1);
-  Joystick.setButton(7, ladder3 & 0x2);
-  Joystick.setButton(8, ladder3 & 0x4);
+  // int ladder3 = readLadderPin(A5);
+  // Joystick.setButton(6, ladder3 & 0x1);
+  // Joystick.setButton(7, ladder3 & 0x2);
+  // Joystick.setButton(8, ladder3 & 0x4);
 
   delay(50);
 }
