@@ -67,7 +67,38 @@ int near(int val, int ref, int dist = 4) { return abs(val - ref) <= dist; }
  * This function reads the given analog pin and converts to a 3-bit digital
  * value.
  */
-int left_row_ladder_table[8] = { 0, 515, 616, 682, 770, 820, 829, 879 };
+int left_row_ladder_table[8] = { 
+  0,    // 000
+  515,  // 001
+  616,  // 010
+  770,  // 011
+  682,  // 100
+  820,  // 101
+  829,  // 110
+  879   // 111
+};
+
+int middle_row_ladder_table[8] = { 
+  0,    // 000
+  686,  // 001
+  617,  // 010
+  831,  // 011
+  512,  // 100
+  821,  // 101
+  770,  // 110
+  898   // 111
+};
+
+int right_row_ladder_table[8] = { 
+  0,    // 000
+  685,  // 001
+  617,  // 010
+  831,  // 011
+  512,  // 100
+  821,  // 101
+  770,  // 110
+  879   // 111
+};
 
 int readLadderPin(int pin, int num_entries, int table[]) {
   int val = analogRead(pin);
