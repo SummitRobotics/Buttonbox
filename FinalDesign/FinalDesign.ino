@@ -130,15 +130,15 @@ void loop() {
   int right_column_buttons =
       readLadderPin(RIGHT_COLUMN_BUTTON_LADDER, 8, right_column_ladder_table);
 
-  bool button1 = left_column_buttons & 0x1 != 0;
-  bool button2 = middle_column_buttons & 0x1 != 0;
-  bool button3 = right_column_buttons & 0x1 != 0;
-  bool button4 = left_column_buttons & 0x2 != 0;
-  bool button5 = middle_column_buttons & 0x2 != 0;
-  bool button6 = right_column_buttons & 0x2 != 0;
-  bool button7 = left_column_buttons & 0x4 != 0;
-  bool button8 = middle_column_buttons & 0x4 != 0;
-  bool button9 = right_column_buttons & 0x4 != 0;
+  bool button1 = (left_column_buttons & 0x1) != 0;
+  bool button2 = (middle_column_buttons & 0x1) != 0;
+  bool button3 = (right_column_buttons & 0x1) != 0;
+  bool button4 = (left_column_buttons & 0x2) != 0;
+  bool button5 = (middle_column_buttons & 0x2) != 0;
+  bool button6 = (right_column_buttons & 0x2) != 0;
+  bool button7 = (left_column_buttons & 0x4) != 0;
+  bool button8 = (middle_column_buttons & 0x4) != 0;
+  bool button9 = (right_column_buttons & 0x4) != 0;
 
   // Light up pins based on ladder bits set above
   digitalWrite(BUTTON_LED_1, button1 ? HIGH : LOW);
@@ -166,12 +166,12 @@ void loop() {
   int fun_missile_dial =
       readLadderPin(FUN_MISSILE_LADDER, 12, fun_missile_ladder_table);
 
-  bool missileSwitch1 = fun_missile_dial & MISSILE_SWITCH_1_MASK != 0;
-  bool missileSwitch2 = fun_missile_dial & MISSILE_SWITCH_2_MASK != 0;
-  bool funDial1 = fun_missile_dial & FUN_DIAL_LEFT_MASK != 0;
+  bool missileSwitch1 = (fun_missile_dial & MISSILE_SWITCH_1_MASK) != 0;
+  bool missileSwitch2 = (fun_missile_dial & MISSILE_SWITCH_2_MASK) != 0;
+  bool funDial1 = (fun_missile_dial & FUN_DIAL_LEFT_MASK) != 0;
   bool funDial2 =
       (fun_missile_dial & (MISSILE_SWITCH_1_MASK | FUN_DIAL_LEFT_MASK)) == 0;
-  bool funDial3 = fun_missile_dial & FUN_DIAL_RIGHT_MASK != 0;
+  bool funDial3 = (fun_missile_dial & FUN_DIAL_RIGHT_MASK) != 0;
 
   Joystick.setButton(9, missileSwitch1);
   Joystick.setButton(10, missileSwitch2);
