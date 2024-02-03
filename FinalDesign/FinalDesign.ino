@@ -1,5 +1,9 @@
+#include <Adafruit_GFX.h>
+#include <Adafruit_SH110X.h>
 #include <Encoder.h>
 #include <Joystick.h>
+#include <Wire.h>
+
 
 // Encoders should use pins 0-3 for interrupt support
 #define ENCODER_1_PIN_1 3
@@ -30,6 +34,13 @@
 // [ MISSILE_SWITCH_1 MISSILE_SWITCH_2 FUN_DIAL_LEFT FUN_DIAL_RIGHT ]
 #define FUN_MISSILE_LADDER A2
 
+#define i2c_Address 0x3c
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define OLED_RESET -1    //   QT-PY / XIAO
+Adafruit_SH1106G display =
+    Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
 Encoder enc1(ENCODER_1_PIN_1, ENCODER_1_PIN_2);
 Encoder enc2(ENCODER_2_PIN_1, ENCODER_2_PIN_2);
 
@@ -54,6 +65,10 @@ void setup() {
   digitalWrite(BUTTON_LED_7, LOW);
   digitalWrite(BUTTON_LED_8, LOW);
   digitalWrite(BUTTON_LED_9, LOW);
+
+  delay(250);                       // wait for the OLED to power up
+  display.begin(i2c_Address, true); // Address 0x3C default
+  display.display();
 
   Serial.begin(9600);
   Joystick.begin();
@@ -191,12 +206,10 @@ void loop() {
 
   // Read and set encoder axis positions
   Serial.print(enc1.read());
-  Serial.print(' - ');
+  Serial.print(" - ");
   Serial.println(enc2.read());
   // Joystick.setXAxisRotation(enc1.read());
   // Joystick.setYAxisRotation(enc2.read());
-
-  Serial.println(enc2.read());
 
   delay(50);
 }
