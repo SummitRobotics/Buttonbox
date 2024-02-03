@@ -150,7 +150,7 @@ void loop() {
   digitalWrite(BUTTON_LED_7, button7 ? HIGH : LOW);
   digitalWrite(BUTTON_LED_8, button8 ? HIGH : LOW);
   digitalWrite(BUTTON_LED_9, button9 ? HIGH : LOW);
-
+ 
   // Drive joystick buttons (0-based)
   Joystick.setButton(0, button1);
   Joystick.setButton(1, button2);
