@@ -4,10 +4,9 @@
 #include <Joystick.h>
 #include <Wire.h>
 
-
-// Encoders should use pins 0-3 for interrupt support
-#define ENCODER_1_PIN_1 3
-#define ENCODER_1_PIN_2 2
+// Encoders should use interrupt pins when possible [0-3, 7]
+#define ENCODER_1_PIN_1 7
+#define ENCODER_1_PIN_2 13
 #define ENCODER_2_PIN_1 1
 #define ENCODER_2_PIN_2 0
 
@@ -16,13 +15,13 @@
 // [ 7 8 9 ]
 #define BUTTON_LED_1 A0
 #define BUTTON_LED_2 A1
-#define BUTTON_LED_3 10
+#define BUTTON_LED_3 11
 #define BUTTON_LED_4 6
 #define BUTTON_LED_5 5
 #define BUTTON_LED_6 4
 #define BUTTON_LED_7 9
 #define BUTTON_LED_8 8
-#define BUTTON_LED_9 7
+#define BUTTON_LED_9 10
 
 // [ 1 4 7 ]
 #define LEFT_COLUMN_BUTTON_LADDER A3
@@ -37,7 +36,9 @@
 #define i2c_Address 0x3c
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#define OLED_RESET -1    //   QT-PY / XIAO
+#define OLED_RESET -1    // QT-PY / XIAO
+
+// Using
 Adafruit_SH1106G display =
     Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
@@ -66,8 +67,9 @@ void setup() {
   digitalWrite(BUTTON_LED_8, LOW);
   digitalWrite(BUTTON_LED_9, LOW);
 
-  delay(250);                       // wait for the OLED to power up
-  display.begin(i2c_Address, true); // Address 0x3C default
+  // wait for the OLED to power up
+  delay(250);
+  display.begin(i2c_Address, true);
   display.display();
 
   Serial.begin(9600);
@@ -143,6 +145,9 @@ int readLadderPin(int pin, int num_entries, int table[]) {
   return 0;
 }
 
+int circle1_r = 16;
+int circle2_r = 16;
+
 void loop() {
   // Read button ladder pins
   int left_column_buttons =
@@ -204,10 +209,17 @@ void loop() {
   Joystick.setButton(12, funDial2);
   Joystick.setButton(13, funDial3);
 
-  // Read and set encoder axis positions
-  Serial.print(enc1.read());
-  Serial.print(" - ");
-  Serial.println(enc2.read());
+  int enc1_val = enc1.readAndReset() / 4;
+  int enc2_val = enc2.readAndReset() / 4;
+
+  circle1_r = constrain(circle1_r + enc1_val, 1, 30);
+  circle2_r = constrain(circle2_r + enc2_val, 1, 30);
+
+  display.clearDisplay();
+  display.drawCircle(32, 32, circle1_r, SH110X_WHITE);
+  display.drawCircle(96, 32, circle2_r, SH110X_WHITE);
+  display.display();
+
   // Joystick.setXAxisRotation(enc1.read());
   // Joystick.setYAxisRotation(enc2.read());
 
