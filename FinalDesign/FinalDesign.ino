@@ -75,7 +75,7 @@ int left_row_ladder_table[8] = {
   682,  // 100
   820,  // 101
   829,  // 110
-  879   // 111
+  897   // 111
 };
 
 int middle_row_ladder_table[8] = { 
@@ -97,7 +97,7 @@ int right_row_ladder_table[8] = {
   512,  // 100
   821,  // 101
   770,  // 110
-  879   // 111
+  897   // 111
 };
 
 int readLadderPin(int pin, int num_entries, int table[]) {
