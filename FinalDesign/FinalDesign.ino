@@ -112,7 +112,7 @@ int fun_missile_ladder_table[12] = {
 
 int readLadderPin(int pin, int num_entries, int table[]) {
   int val = analogRead(pin);
-  Serial.println(val);
+  // Serial.println(val);
   for (int i = 0; i < num_entries; ++i) {
     if (isNear(val, table[i])) {
       return i;
