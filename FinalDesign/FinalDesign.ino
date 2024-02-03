@@ -111,6 +111,24 @@ int readLadderPin(int pin, int num_entries, int table[]) {
 }
 
 void loop() {
+  // Read button ladder pins
+  int left_row_buttons =
+      readLadderPin(LEFT_COLUMN_BUTTON_LADDER, 8, left_row_ladder_table);
+  int middle_row_buttons =
+      readLadderPin(MIDDLE_COLUMN_BUTTON_LADDER, 8, middle_row_ladder_table);
+  int right_row_buttons =
+      readLadderPin(RIGHT_COLUMN_BUTTON_LADDER, 8, right_row_ladder_table);
+
+  // Light up pins based on ladder bits set above
+  digitalWrite(BUTTON_LED_1, left_row_buttons & 0x1 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_2, middle_row_buttons & 0x1 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_3, right_row_buttons & 0x1 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_4, left_row_buttons & 0x2 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_5, middle_row_buttons & 0x2 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_6, right_row_buttons & 0x2 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_7, left_row_buttons & 0x4 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_8, middle_row_buttons & 0x4 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_9, right_row_buttons & 0x4 ? HIGH : LOW);
 
   // int val2 = analogRead(A2);
   // if (near(val2, 176))  {
