@@ -52,17 +52,10 @@ void setup() {
   Joystick.begin();
 }
 
-// button values will most likely be different this is just a template
-int near(int val, int ref, int dist = 4) { return abs(val - ref) <= dist; }
+boolean isNear(int val, int ref, int epsilon = 4) {
+  return abs(val - ref) <= epsilon;
+}
 
-// int near2(int val2, int ref, int dist = 2) {
-//   return abs(val2 - ref) <= dist;
-// }
-
-/*
- * This function reads the given analog pin and converts to a 3-bit digital
- * value.
- */
 int left_column_ladder_table[8] = {
     0,   // 000
     515, // 001
@@ -101,7 +94,7 @@ int right_column_ladder_table[8] = {
 #define FUN_DIAL_LEFT_MASK 0x4
 #define FUN_DIAL_RIGHT_MASK 0x8
 
-// FUN_DIAL_LEFT + FUN_DIAL_RIGHT not possible
+// FUN_DIAL_LEFT + FUN_DIAL_RIGHT combination is not possible
 int fun_missle_ladder_table[12] = {
     0,   // 0000
     318, // 0001
@@ -121,7 +114,7 @@ int readLadderPin(int pin, int num_entries, int table[]) {
   int val = analogRead(pin);
   Serial.println(val);
   for (int i = 0; i < num_entries; ++i) {
-    if (near(val, table[i])) {
+    if (isNear(val, table[i])) {
       return i;
     }
   }
@@ -136,7 +129,6 @@ void loop() {
       readLadderPin(MIDDLE_COLUMN_BUTTON_LADDER, 8, middle_column_ladder_table);
   int right_column_buttons =
       readLadderPin(RIGHT_COLUMN_BUTTON_LADDER, 8, right_column_ladder_table);
-
 
   // Light up pins based on ladder bits set above
   digitalWrite(BUTTON_LED_1, left_column_buttons & 0x1 ? HIGH : LOW);
@@ -153,6 +145,7 @@ void loop() {
   int fun_missle_dial =
       readLadderPin(FUN_MISSLE_LADDER, 12, fun_missle_ladder_table);
 
+  // Log the fun dial and missle toggle states
   if (fun_missle_dial & MISSILE_SWITCH_1_MASK) {
     Serial.print("[Missle1] ");
   }
