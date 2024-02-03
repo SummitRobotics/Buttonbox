@@ -21,7 +21,7 @@
 #define MIDDLE_COLUMN_BUTTON_LADDER A4
 #define RIGHT_COLUMN_BUTTON_LADDER A5
 
-#define FUN_MISSLE_LADDER A2
+#define FUN_MISSILE_LADDER A2
 
 Encoder enc1(ENCODER_1_PIN_1, ENCODER_1_PIN_2);
 Encoder enc2(ENCODER_2_PIN_1, ENCODER_2_PIN_1);
@@ -95,7 +95,7 @@ int right_column_ladder_table[8] = {
 #define FUN_DIAL_RIGHT_MASK 0x8
 
 // FUN_DIAL_LEFT + FUN_DIAL_RIGHT combination is not possible
-int fun_missle_ladder_table[12] = {
+int fun_missile_ladder_table[12] = {
     0,   // 0000
     318, // 0001
     505, // 0010
@@ -130,41 +130,58 @@ void loop() {
   int right_column_buttons =
       readLadderPin(RIGHT_COLUMN_BUTTON_LADDER, 8, right_column_ladder_table);
 
+  bool button1 = left_column_buttons & 0x1 != 0;
+  bool button2 = middle_column_buttons & 0x1 != 0;
+  bool button3 = right_column_buttons & 0x1 != 0;
+  bool button4 = left_column_buttons & 0x2 != 0;
+  bool button5 = middle_column_buttons & 0x2 != 0;
+  bool button6 = right_column_buttons & 0x2 != 0;
+  bool button7 = left_column_buttons & 0x4 != 0;
+  bool button8 = middle_column_buttons & 0x4 != 0;
+  bool button9 = right_column_buttons & 0x4 != 0;
+
   // Light up pins based on ladder bits set above
-  digitalWrite(BUTTON_LED_1, left_column_buttons & 0x1 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_2, middle_column_buttons & 0x1 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_3, right_column_buttons & 0x1 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_4, left_column_buttons & 0x2 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_5, middle_column_buttons & 0x2 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_6, right_column_buttons & 0x2 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_7, left_column_buttons & 0x4 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_8, middle_column_buttons & 0x4 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_9, right_column_buttons & 0x4 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_1, button1 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_2, button2 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_3, button3 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_4, button4 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_5, button5 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_6, button6 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_7, button7 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_8, button8 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_9, button9 ? HIGH : LOW);
 
-  // Read the fun dial and missle toggles
-  int fun_missle_dial =
-      readLadderPin(FUN_MISSLE_LADDER, 12, fun_missle_ladder_table);
+  // Drive joystick buttons (0-based)
+  Joystick.setButton(0, button1);
+  Joystick.setButton(1, button2);
+  Joystick.setButton(2, button3);
+  Joystick.setButton(3, button4);
+  Joystick.setButton(4, button5);
+  Joystick.setButton(5, button6);
+  Joystick.setButton(6, button7);
+  Joystick.setButton(7, button8);
+  Joystick.setButton(8, button9);
 
-  // Log the fun dial and missle toggle states
-  if (fun_missle_dial & MISSILE_SWITCH_1_MASK) {
-    Serial.print("[Missle1] ");
-  }
-  if (fun_missle_dial & MISSILE_SWITCH_2_MASK) {
-    Serial.print("[Missle2] ");
-  }
-  if (fun_missle_dial & FUN_DIAL_LEFT_MASK) {
-    Serial.print("[FunDialLeft] ");
-  } else if (fun_missle_dial & FUN_DIAL_RIGHT_MASK) {
-    Serial.print("[FunDialRight] ");
-  } else {
-    Serial.print("[FunDialMiddle]");
-  }
-  Serial.println("");
+  // Read the fun dial and missile toggles
+  int fun_missile_dial =
+      readLadderPin(FUN_MISSILE_LADDER, 12, fun_missile_ladder_table);
 
-  // Joystick.setXAxisRotation(enc1.read());
-  // Joystick.setYAxisRotation(enc2.read());
-  // Joystick.setButton(0, ladder1 & 0x1);
-  // Joystick.setButton(1, ladder1 & 0x2);
+  bool missileSwitch1 = fun_missile_dial & MISSILE_SWITCH_1_MASK != 0;
+  bool missileSwitch2 = fun_missile_dial & MISSILE_SWITCH_2_MASK != 0;
+  bool funDial1 = fun_missile_dial & FUN_DIAL_LEFT_MASK != 0;
+  bool funDial2 =
+      (fun_missile_dial & (MISSILE_SWITCH_1_MASK | FUN_DIAL_LEFT_MASK)) == 0;
+  bool funDial3 = fun_missile_dial & FUN_DIAL_RIGHT_MASK != 0;
+
+  Joystick.setButton(9, missileSwitch1);
+  Joystick.setButton(10, missileSwitch2);
+  Joystick.setButton(11, funDial1);
+  Joystick.setButton(12, funDial2);
+  Joystick.setButton(13, funDial3);
+
+  // Read and set encoder axis positions
+  Joystick.setXAxisRotation(enc1.read());
+  Joystick.setYAxisRotation(enc2.read());
 
   delay(50);
 }
