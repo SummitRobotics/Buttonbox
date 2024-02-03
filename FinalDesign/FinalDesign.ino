@@ -24,7 +24,7 @@
 #define FUN_MISSILE_LADDER A2
 
 Encoder enc1(ENCODER_1_PIN_1, ENCODER_1_PIN_2);
-Encoder enc2(ENCODER_2_PIN_1, ENCODER_2_PIN_1);
+Encoder enc2(ENCODER_2_PIN_1, ENCODER_2_PIN_2);
 
 void setup() {
   // Initialize all output pins and drive LOW.
@@ -170,7 +170,7 @@ void loop() {
   bool missileSwitch2 = (fun_missile_dial & MISSILE_SWITCH_2_MASK) != 0;
   bool funDial1 = (fun_missile_dial & FUN_DIAL_LEFT_MASK) != 0;
   bool funDial3 = (fun_missile_dial & FUN_DIAL_RIGHT_MASK) != 0;
-  bool funDial2 = !(funDial1 || funDial2);
+  bool funDial2 = !(funDial1 || funDial3);
 
   Joystick.setButton(9, missileSwitch1);
   Joystick.setButton(10, missileSwitch2);
@@ -181,6 +181,8 @@ void loop() {
   // Read and set encoder axis positions
   Joystick.setXAxisRotation(enc1.read());
   Joystick.setYAxisRotation(enc2.read());
+
+  Serial.println(enc2.read());
 
   delay(50);
 }
