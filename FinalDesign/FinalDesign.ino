@@ -67,7 +67,7 @@ int near(int val, int ref, int dist = 4) { return abs(val - ref) <= dist; }
  * This function reads the given analog pin and converts to a 3-bit digital
  * value.
  */
-int left_row_ladder_table[8] = { 
+int left_column_ladder_table[8] = { 
   0,    // 000
   515,  // 001
   616,  // 010
@@ -78,7 +78,7 @@ int left_row_ladder_table[8] = {
   897   // 111
 };
 
-int middle_row_ladder_table[8] = { 
+int middle_column_ladder_table[8] = { 
   0,    // 000
   686,  // 001
   617,  // 010
@@ -89,7 +89,7 @@ int middle_row_ladder_table[8] = {
   898   // 111
 };
 
-int right_row_ladder_table[8] = { 
+int right_column_ladder_table[8] = { 
   0,    // 000
   685,  // 001
   617,  // 010
@@ -102,6 +102,7 @@ int right_row_ladder_table[8] = {
 
 int readLadderPin(int pin, int num_entries, int table[]) {
   int val = analogRead(pin);
+  Serial.println(val);
   for (int i = 0; i < num_entries; ++i) {
     if (near(val, table[i])) {
       return i;
@@ -112,23 +113,23 @@ int readLadderPin(int pin, int num_entries, int table[]) {
 
 void loop() {
   // Read button ladder pins
-  int left_row_buttons =
-      readLadderPin(LEFT_COLUMN_BUTTON_LADDER, 8, left_row_ladder_table);
-  int middle_row_buttons =
-      readLadderPin(MIDDLE_COLUMN_BUTTON_LADDER, 8, middle_row_ladder_table);
-  int right_row_buttons =
-      readLadderPin(RIGHT_COLUMN_BUTTON_LADDER, 8, right_row_ladder_table);
+  int left_column_buttons =
+      readLadderPin(LEFT_COLUMN_BUTTON_LADDER, 8, left_column_ladder_table);
+  int middle_column_buttons =
+      readLadderPin(MIDDLE_COLUMN_BUTTON_LADDER, 8, middle_column_ladder_table);
+  int right_column_buttons =
+      readLadderPin(RIGHT_COLUMN_BUTTON_LADDER, 8, right_column_ladder_table);
 
   // Light up pins based on ladder bits set above
-  digitalWrite(BUTTON_LED_1, left_row_buttons & 0x1 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_2, middle_row_buttons & 0x1 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_3, right_row_buttons & 0x1 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_4, left_row_buttons & 0x2 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_5, middle_row_buttons & 0x2 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_6, right_row_buttons & 0x2 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_7, left_row_buttons & 0x4 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_8, middle_row_buttons & 0x4 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_9, right_row_buttons & 0x4 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_1, left_column_buttons & 0x1 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_2, middle_column_buttons & 0x1 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_3, right_column_buttons & 0x1 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_4, left_column_buttons & 0x2 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_5, middle_column_buttons & 0x2 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_6, right_column_buttons & 0x2 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_7, left_column_buttons & 0x4 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_8, middle_column_buttons & 0x4 ? HIGH : LOW);
+  digitalWrite(BUTTON_LED_9, right_column_buttons & 0x4 ? HIGH : LOW);
 
   // int val2 = analogRead(A2);
   // if (near(val2, 176))  {
@@ -162,13 +163,13 @@ void loop() {
   // Joystick.setXAxisRotation(enc1.read());
   // Joystick.setYAxisRotation(enc2.read());
 
-  Serial.println(enc2.read());
+  // Serial.println(enc2.read());
   // Serial.println(enc2.read());
 
   // int camel = analogRead(A2);
   // Serial.println(camel);
   Serial.println(
-      readLadderPin(LEFT_COLUMN_BUTTON_LADDER, 8, left_row_ladder_table));
+      readLadderPin(RIGHT_COLUMN_BUTTON_LADDER, 8, right_column_ladder_table));
 
   // int ladder1 = readLadderPin(A3);
   // Joystick.setButton(0, ladder1 & 0x1);
