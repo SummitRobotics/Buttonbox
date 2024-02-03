@@ -31,7 +31,7 @@
 #define FUN_MISSILE_LADDER A2
 
 Encoder enc1(ENCODER_1_PIN_1, ENCODER_1_PIN_2);
-Encoder enc2(ENCODER_2_PIN_1, ENCODER_2_PIN_1);
+Encoder enc2(ENCODER_2_PIN_1, ENCODER_2_PIN_2);
 
 void setup() {
   // Initialize all output pins and drive LOW.
@@ -195,6 +195,8 @@ void loop() {
   Serial.println(enc2.read());
   // Joystick.setXAxisRotation(enc1.read());
   // Joystick.setYAxisRotation(enc2.read());
+
+  Serial.println(enc2.read());
 
   delay(50);
 }
