@@ -104,13 +104,13 @@ int right_column_ladder_table[8] = {
 // FUN_DIAL_LEFT + FUN_DIAL_RIGHT not possible
 int fun_missle_ladder_table[12] = {
     0,   // 0000
-    407, // 0001
-    555, // 0010
-    635, // 0011
+    318, // 0001
+    505, // 0010
+    602, // 0011
     176, // 0100
     407, // 0101
-    505, // 0110
-    602, // 0111
+    555, // 0110
+    635, // 0111
     88,  // 1000
     362, // 1001
     527, // 1010
@@ -161,9 +161,10 @@ void loop() {
   }
   if (fun_missle_dial & FUN_DIAL_LEFT_MASK) {
     Serial.print("[FunDialLeft] ");
-  }
-  if (fun_missle_dial & FUN_DIAL_RIGHT_MASK) {
+  } else if (fun_missle_dial & FUN_DIAL_RIGHT_MASK) {
     Serial.print("[FunDialRight] ");
+  } else {
+    Serial.print("[FunDialMiddle]");
   }
   Serial.println("");
 
