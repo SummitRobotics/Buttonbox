@@ -1,12 +1,15 @@
 #include <Encoder.h>
 #include <Joystick.h>
 
-// Pin Layout
+// Encoders should use pins 0-3 for interrupt support
 #define ENCODER_1_PIN_1 3
 #define ENCODER_1_PIN_2 2
 #define ENCODER_2_PIN_1 1
 #define ENCODER_2_PIN_2 0
 
+// [ 1 2 3 ]
+// [ 4 5 6 ]
+// [ 7 8 9 ]
 #define BUTTON_LED_1 A0
 #define BUTTON_LED_2 A1
 #define BUTTON_LED_3 10
@@ -17,10 +20,14 @@
 #define BUTTON_LED_8 8
 #define BUTTON_LED_9 7
 
+// [ 1 4 7 ]
 #define LEFT_COLUMN_BUTTON_LADDER A3
+// [ 2 5 8 ]
 #define MIDDLE_COLUMN_BUTTON_LADDER A4
+// [ 3 6 9 ]
 #define RIGHT_COLUMN_BUTTON_LADDER A5
 
+// [ MISSILE_SWITCH_1 MISSILE_SWITCH_2 FUN_DIAL_LEFT FUN_DIAL_RIGHT ]
 #define FUN_MISSILE_LADDER A2
 
 Encoder enc1(ENCODER_1_PIN_1, ENCODER_1_PIN_2);
@@ -94,7 +101,7 @@ int right_column_ladder_table[8] = {
 #define FUN_DIAL_LEFT_MASK 0x4
 #define FUN_DIAL_RIGHT_MASK 0x8
 
-// FUN_DIAL_LEFT + FUN_DIAL_RIGHT combination is not possible
+// FUN_DIAL_LEFT + FUN_DIAL_RIGHT combination is not possible, (11xx) bits.
 int fun_missile_ladder_table[12] = {
     0,   // 0000
     318, // 0001
@@ -118,7 +125,7 @@ int readLadderPin(int pin, int num_entries, int table[]) {
       return i;
     }
   }
-  return 0; // return default as nothing
+  return 0;
 }
 
 void loop() {
@@ -130,6 +137,7 @@ void loop() {
   int right_column_buttons =
       readLadderPin(RIGHT_COLUMN_BUTTON_LADDER, 8, right_column_ladder_table);
 
+  // Compute boolean state of each button
   bool button1 = (left_column_buttons & 0x1) != 0;
   bool button2 = (middle_column_buttons & 0x1) != 0;
   bool button3 = (right_column_buttons & 0x1) != 0;
@@ -140,7 +148,7 @@ void loop() {
   bool button8 = (middle_column_buttons & 0x4) != 0;
   bool button9 = (right_column_buttons & 0x4) != 0;
 
-  // Light up pins based on ladder bits set above
+  // Light up LEDs based on ladder bits set above
   digitalWrite(BUTTON_LED_1, button1 ? HIGH : LOW);
   digitalWrite(BUTTON_LED_2, button2 ? HIGH : LOW);
   digitalWrite(BUTTON_LED_3, button3 ? HIGH : LOW);
@@ -150,7 +158,7 @@ void loop() {
   digitalWrite(BUTTON_LED_7, button7 ? HIGH : LOW);
   digitalWrite(BUTTON_LED_8, button8 ? HIGH : LOW);
   digitalWrite(BUTTON_LED_9, button9 ? HIGH : LOW);
- 
+
   // Drive joystick buttons (0-based)
   Joystick.setButton(0, button1);
   Joystick.setButton(1, button2);
@@ -166,12 +174,15 @@ void loop() {
   int fun_missile_dial =
       readLadderPin(FUN_MISSILE_LADDER, 12, fun_missile_ladder_table);
 
+  // Compute boolean state of each component. funDial2 is absences of funDial1
+  // and funDial3
   bool missileSwitch1 = (fun_missile_dial & MISSILE_SWITCH_1_MASK) != 0;
   bool missileSwitch2 = (fun_missile_dial & MISSILE_SWITCH_2_MASK) != 0;
   bool funDial1 = (fun_missile_dial & FUN_DIAL_LEFT_MASK) != 0;
   bool funDial3 = (fun_missile_dial & FUN_DIAL_RIGHT_MASK) != 0;
-  bool funDial2 = !(funDial1 || funDial2);
+  bool funDial2 = !(funDial1 || funDial3);
 
+  // Drive states as buttons (0-based)
   Joystick.setButton(9, missileSwitch1);
   Joystick.setButton(10, missileSwitch2);
   Joystick.setButton(11, funDial1);
@@ -179,8 +190,11 @@ void loop() {
   Joystick.setButton(13, funDial3);
 
   // Read and set encoder axis positions
-  Joystick.setXAxisRotation(enc1.read());
-  Joystick.setYAxisRotation(enc2.read());
+  Serial.print(enc1.read());
+  Serial.print(' - ');
+  Serial.println(enc2.read());
+  // Joystick.setXAxisRotation(enc1.read());
+  // Joystick.setYAxisRotation(enc2.read());
 
   delay(50);
 }
