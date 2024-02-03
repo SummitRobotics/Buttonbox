@@ -169,9 +169,8 @@ void loop() {
   bool missileSwitch1 = (fun_missile_dial & MISSILE_SWITCH_1_MASK) != 0;
   bool missileSwitch2 = (fun_missile_dial & MISSILE_SWITCH_2_MASK) != 0;
   bool funDial1 = (fun_missile_dial & FUN_DIAL_LEFT_MASK) != 0;
-  bool funDial2 =
-      (fun_missile_dial & (FUN_DIAL_LEFT_MASK | FUN_DIAL_RIGHT_MASK)) == 0;
   bool funDial3 = (fun_missile_dial & FUN_DIAL_RIGHT_MASK) != 0;
+  bool funDial2 = !(funDial1 | funDial2);
 
   Joystick.setButton(9, missileSwitch1);
   Joystick.setButton(10, missileSwitch2);
