@@ -3,6 +3,7 @@
 #include <Encoder.h>
 #include <Joystick.h>
 #include <Wire.h>
+// #include <FastTrig.h>
 
 // Encoders should use interrupt pins when possible [0-3, 7]
 #define ENCODER_1_PIN_1 7
@@ -37,6 +38,8 @@
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET -1    // QT-PY / XIAO
+#define COLOR_WHITE SH110X_WHITE
+#define COLOR_BLACK SH110X_BLACK
 
 Adafruit_SH1106G display =
     Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -71,6 +74,7 @@ void setup() {
   // wait for the OLED to power up
   delay(250);
   display.begin(i2c_Address, true);
+  display.clearDisplay();
   display.display();
 
   Serial.begin(9600);
@@ -167,21 +171,161 @@ int32_t readJoystickOutput() {
   return ((int32_t)DynamicHID().read()) + (((int32_t)DynamicHID().read()) << 8);
 }
 
-// Upper two bits of the 16-bit driver station message indicate message type
-enum DriverStationMessageType {
+// Only have 16-bit messages to work with:
+enum MessageEnums {
+  // [14..15]: MessageType
   MessageType_Mask = 0xC000, // up to 4 message types
   MessageType_Shift = 14,
-  MessageType_ButtonLeds = 0,
-  MessageType_ScreenMode = 1,
+  MessageType_LedsUpdate = 0,
+  MessageType_ViewUpdate = 1,
+  // [12..13]: ViewType
+  ViewType_Mask = 0x3000, // up to 4 view types
+  ViewType_Shift = 12,
+  ViewType_None = 0,
+  ViewType_Progress = 1,
+  ViewType_Orientation = 2,
+  ViewType_Counter = 3,
+  // [11]: Frame
+  Frame_Mask = 0x800,
+  Frame_Shift = 11,
+  // [10]: Value
+  Value_Mask = 0x7ff,
+  Value_Shift = 0
 };
 
-int circle1_r = 16;
-int circle2_r = 16;
+uint16_t GET_MESSAGE_TYPE(uint16_t val) {
+  return (val & MessageType_Mask) >> MessageType_Shift;
+}
+uint16_t SET_MESSAGE_TYPE(uint16_t val) { return val << MessageType_Shift; }
+uint16_t GET_VIEW_TYPE(uint16_t val) {
+  return (val & ViewType_Mask) >> ViewType_Shift;
+}
+uint16_t SET_VIEW_TYPE(uint16_t val) { return val << ViewType_Shift; }
+uint16_t GET_FRAME(uint16_t val) { return (val & Frame_Mask) >> Frame_Shift; }
+uint16_t SET_FRAME(uint16_t val) { return val << Frame_Shift; }
+uint16_t GET_VALUE(uint16_t val) { return (val & Value_Mask) >> Value_Shift; }
+uint16_t SET_VALUE(uint16_t val) { return val << Value_Shift; }
+
+struct Vertex2i {
+  int16_t x;
+  int16_t y;
+};
+
+struct DrawState {
+  uint8_t view;  // View type
+  int16_t value; // ViewType_Orientation - angle [0-360), ViewType_Progress -
+                 // [0, 100]
+  Vertex2i verts[3]; // ViewType_Orientation - 3 triangle verts
+  bool frame;        // Draw single pixel frame
+  bool dirty;        // State is dirty
+};
+DrawState drawState = {};
+
+void drawCenterString(const char *buf, int x, int y, int size = 1,
+                      int color = COLOR_WHITE) {
+  int16_t x1, y1;
+  uint16_t w, h;
+  display.setTextSize(size);
+  display.setTextColor(color);
+  display.getTextBounds(buf, 0, 0, &x1, &y1, &w, &h);
+  display.setCursor(x - w / 2, y - h / 2);
+  display.print(buf);
+}
+
+void progressViewClear() {
+  display.drawRect(4, 32, 4 + drawState.value, 8, COLOR_BLACK);
+  drawState.dirty = true;
+}
+
+void progressViewDraw(int16_t value) {
+  display.drawRect(4, 32, 4 + value, 8, COLOR_WHITE);
+  drawState.value = value;
+  drawState.dirty = true;
+}
+
+void orientationViewClear() {
+  display.drawTriangle(drawState.verts[0].x, drawState.verts[0].y,
+                       drawState.verts[1].x, drawState.verts[1].y,
+                       drawState.verts[2].x, drawState.verts[2].y, COLOR_BLACK);
+  drawState.dirty = true;
+}
+
+void orientationViewDraw(int16_t angle) {
+  float s = sin(radians(angle));
+  float c = cos(radians(angle));
+  Vertex2i shape[3] = {{-5, -7}, {0, 10}, {5, -7}};
+  Vertex2i rotated[3];
+  for (int i = 0; i < 3; ++i) {
+    rotated[i].x = (SCREEN_WIDTH / 2) + (shape[i].x * c) - (shape[i].y * s);
+    rotated[i].y =
+        ((SCREEN_HEIGHT / 2) + 12) + (shape[i].y * c) + (shape[i].x * s);
+  }
+  display.drawTriangle(rotated[0].x, rotated[0].y, rotated[1].x, rotated[1].y,
+                       rotated[2].x, rotated[2].y, COLOR_WHITE);
+
+  // Store state
+  drawState.value = angle;
+  memcpy(drawState.verts, rotated, sizeof(Vertex2i) * 3);
+  drawState.dirty = true;
+}
+
+void counterViewClear() {
+  String valueString(drawState.value);
+  drawCenterString(valueString.c_str(), SCREEN_WIDTH / 2,
+                   SCREEN_HEIGHT / 2 + 12, 3, COLOR_BLACK);
+  drawState.dirty = true;
+}
+
+void counterViewDraw(int16_t value) {
+  String valueString(value);
+  drawCenterString(valueString.c_str(), SCREEN_WIDTH / 2,
+                   SCREEN_HEIGHT / 2 + 12, 3, COLOR_WHITE);
+  drawState.value = value;
+  drawState.dirty = true;
+}
+
+void drawFrame(bool frame) {
+  if (drawState.frame == frame) {
+    return;
+  }
+  display.drawRect(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1,
+                   frame ? COLOR_WHITE : COLOR_BLACK);
+  drawState.frame = frame;
+  drawState.dirty = true;
+}
+
+void drawViewHeader(uint8_t view) {
+  if (drawState.view == view) {
+    return;
+  }
+
+  if (view == ViewType_None) {
+    display.fillRect(1, 1, SCREEN_WIDTH - 3, 12, COLOR_BLACK);
+  } else {
+    display.fillRect(1, 1, SCREEN_WIDTH - 3, 12, COLOR_WHITE);
+    char *buf = "";
+    switch (view) {
+    case ViewType_Progress:
+      buf = "PROGRESS";
+      break;
+    case ViewType_Orientation:
+      buf = "ORIENTATION";
+      break;
+    case ViewType_Counter:
+      buf = "COUNTER";
+      break;
+    }
+    drawCenterString(buf, 64, 8, 1, COLOR_BLACK);
+  }
+  drawState.dirty = true;
+}
 
 void handleDriverStationMessage(uint16_t message) {
   // Update lights based on the message from Driver Station
-  uint16_t messageType = (message & MessageType_Mask) >> MessageType_Shift;
-  if (messageType == MessageType_ButtonLeds) {
+  uint16_t messageType = GET_MESSAGE_TYPE(message);
+
+  // [0..8] LED ON/OFF state
+  if (messageType == MessageType_LedsUpdate) {
     digitalWrite(BUTTON_LED_1, bitRead(message, 0) ? HIGH : LOW);
     digitalWrite(BUTTON_LED_2, bitRead(message, 1) ? HIGH : LOW);
     digitalWrite(BUTTON_LED_3, bitRead(message, 2) ? HIGH : LOW);
@@ -191,9 +335,42 @@ void handleDriverStationMessage(uint16_t message) {
     digitalWrite(BUTTON_LED_7, bitRead(message, 6) ? HIGH : LOW);
     digitalWrite(BUTTON_LED_8, bitRead(message, 7) ? HIGH : LOW);
     digitalWrite(BUTTON_LED_9, bitRead(message, 8) ? HIGH : LOW);
-  } else if (messageType == MessageType_ScreenMode) {
-    circle1_r = 16;
-    circle2_r = 16;
+  }
+
+  if (messageType == MessageType_ViewUpdate) {
+    uint16_t viewType = GET_VIEW_TYPE(message);
+    uint16_t frame = GET_FRAME(message);
+    uint16_t value = GET_VALUE(message);
+
+    drawViewHeader(viewType);
+    drawFrame(frame);
+    // Clear previous state
+    if (viewType != drawState.view || value != drawState.value) {
+      switch (drawState.view) {
+      case ViewType_Progress:
+        progressViewClear();
+      case ViewType_Orientation:
+        orientationViewClear();
+        break;
+      case ViewType_Counter:
+        counterViewClear();
+        break;
+      }
+
+      // Draw current state
+      switch (viewType) {
+      case ViewType_Progress:
+        progressViewDraw(value);
+        break;
+      case ViewType_Orientation:
+        orientationViewDraw(value);
+        break;
+      case ViewType_Counter:
+        counterViewDraw(value);
+        break;
+      }
+    }
+    drawState.view = viewType;
   }
 }
 
@@ -248,11 +425,8 @@ void tick() {
   joystick.setButton(13, funDial3);
 
   // Read encoders
-  int enc1_val = enc1.readAndReset() / 4;
-  int enc2_val = enc2.readAndReset() / 4;
-
-  circle1_r = constrain(circle1_r + enc1_val, 1, 30);
-  circle2_r = constrain(circle2_r + enc2_val, 1, 30);
+  joystick.setXAxis(enc1.read() / 4);
+  joystick.setYAxis(enc2.read() / 4);
 
   // Read the joystick output from the Driver Station
   int32_t dsMessage = readJoystickOutput();
@@ -260,13 +434,38 @@ void tick() {
     handleDriverStationMessage(dsMessage);
   }
 
-  display.clearDisplay();
-  display.drawCircle(32, 32, circle1_r, SH110X_WHITE);
-  display.drawCircle(96, 32, circle2_r, SH110X_WHITE);
-  display.display();
+  ///////////////////////////////////////////////////
+  // Build test message
+  static unsigned long timeStart = micros();
+  unsigned long timePeriod = (micros() - timeStart) % 3000000;
+  uint16_t message = SET_MESSAGE_TYPE(MessageType_ViewUpdate);
+  if (timePeriod < 1000000) {
+    static uint16_t angle = 0;
+    message |= SET_VIEW_TYPE(ViewType_Orientation);
+    message |= SET_FRAME(1);
+    message |= SET_VALUE(angle);
+    angle = (angle + 1) % 360;
+  } else if (timePeriod < 2000000) {
+    static uint16_t value = 0;
+    message |= SET_VIEW_TYPE(ViewType_Progress);
+    message |= SET_FRAME(0);
+    message |= SET_VALUE(value);
+    value = (value + 1) % 100;
+  } else {
+    static uint16_t count = 0;
+    message |= SET_VIEW_TYPE(ViewType_Counter);
+    message |= SET_FRAME(count > 500);
+    message |= SET_VALUE(count / 10);
+    count = (count + 1) % 1000;
+  }
+  handleDriverStationMessage(message);
+  ///////////////////////////////////////////////////
 
-  // Joystick.setXAxisRotation(enc1.read());
-  // Joystick.setYAxisRotation(enc2.read());
+  // Blit display if dirty
+  if (drawState.dirty) {
+    display.display();
+    drawState.dirty = false;
+  }
 
   joystick.sendState();
 }
