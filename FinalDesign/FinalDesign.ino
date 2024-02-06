@@ -38,9 +38,10 @@
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET -1    // QT-PY / XIAO
 
-// Using
 Adafruit_SH1106G display =
     Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+Joystick_ joystick;
+uint8_t joystickData[2];
 
 Encoder enc1(ENCODER_1_PIN_1, ENCODER_1_PIN_2);
 Encoder enc2(ENCODER_2_PIN_1, ENCODER_2_PIN_2);
@@ -73,7 +74,8 @@ void setup() {
   display.display();
 
   Serial.begin(9600);
-  Joystick.begin();
+  joystick.begin(false);
+  DynamicHID().prepareOutput(joystickData, sizeof(joystickData));
 }
 
 boolean isNear(int val, int ref, int epsilon = 4) {
@@ -145,10 +147,57 @@ int readLadderPin(int pin, int num_entries, int table[]) {
   return 0;
 }
 
+// This function reads two bytes of output data from the joystick.
+// Returns [0, 0xffff] on success
+// Returning -1 if two bytes of output not available.
+int32_t readJoystickOutput() {
+  int available = DynamicHID().available();
+  // No data, return -1.
+  if (available <= 0) {
+    return -1;
+  }
+  // Invalid number available bytes
+  if (available != 2) {
+    while (available--) {
+      DynamicHID().read();
+      return -1;
+    }
+  }
+  // Read BigEndian
+  return ((int32_t)DynamicHID().read()) + (((int32_t)DynamicHID().read()) << 8);
+}
+
+// Upper two bits of the 16-bit driver station message indicate message type
+enum DriverStationMessageType {
+  MessageType_Mask = 0xC000, // up to 4 message types
+  MessageType_Shift = 14,
+  MessageType_ButtonLeds = 0,
+  MessageType_ScreenMode = 1,
+};
+
 int circle1_r = 16;
 int circle2_r = 16;
 
-void loop() {
+void handleDriverStationMessage(uint16_t message) {
+  // Update lights based on the message from Driver Station
+  uint16_t messageType = (message & MessageType_Mask) >> MessageType_Shift;
+  if (messageType == MessageType_ButtonLeds) {
+    digitalWrite(BUTTON_LED_1, bitRead(message, 0) ? HIGH : LOW);
+    digitalWrite(BUTTON_LED_2, bitRead(message, 1) ? HIGH : LOW);
+    digitalWrite(BUTTON_LED_3, bitRead(message, 2) ? HIGH : LOW);
+    digitalWrite(BUTTON_LED_4, bitRead(message, 3) ? HIGH : LOW);
+    digitalWrite(BUTTON_LED_5, bitRead(message, 4) ? HIGH : LOW);
+    digitalWrite(BUTTON_LED_6, bitRead(message, 5) ? HIGH : LOW);
+    digitalWrite(BUTTON_LED_7, bitRead(message, 6) ? HIGH : LOW);
+    digitalWrite(BUTTON_LED_8, bitRead(message, 7) ? HIGH : LOW);
+    digitalWrite(BUTTON_LED_9, bitRead(message, 8) ? HIGH : LOW);
+  } else if (messageType == MessageType_ScreenMode) {
+    circle1_r = 16;
+    circle2_r = 16;
+  }
+}
+
+void tick() {
   // Read button ladder pins
   int left_column_buttons =
       readLadderPin(LEFT_COLUMN_BUTTON_LADDER, 8, left_column_ladder_table);
@@ -168,27 +217,16 @@ void loop() {
   bool button8 = (middle_column_buttons & 0x4) != 0;
   bool button9 = (right_column_buttons & 0x4) != 0;
 
-  // Light up LEDs based on ladder bits set above
-  digitalWrite(BUTTON_LED_1, button1 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_2, button2 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_3, button3 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_4, button4 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_5, button5 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_6, button6 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_7, button7 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_8, button8 ? HIGH : LOW);
-  digitalWrite(BUTTON_LED_9, button9 ? HIGH : LOW);
-
   // Drive joystick buttons (0-based)
-  Joystick.setButton(0, button1);
-  Joystick.setButton(1, button2);
-  Joystick.setButton(2, button3);
-  Joystick.setButton(3, button4);
-  Joystick.setButton(4, button5);
-  Joystick.setButton(5, button6);
-  Joystick.setButton(6, button7);
-  Joystick.setButton(7, button8);
-  Joystick.setButton(8, button9);
+  joystick.setButton(0, button1);
+  joystick.setButton(1, button2);
+  joystick.setButton(2, button3);
+  joystick.setButton(3, button4);
+  joystick.setButton(4, button5);
+  joystick.setButton(5, button6);
+  joystick.setButton(6, button7);
+  joystick.setButton(7, button8);
+  joystick.setButton(8, button9);
 
   // Read the fun dial and missile toggles
   int fun_missile_dial =
@@ -203,17 +241,24 @@ void loop() {
   bool funDial2 = !(funDial1 || funDial3);
 
   // Drive states as buttons (0-based)
-  Joystick.setButton(9, missileSwitch1);
-  Joystick.setButton(10, missileSwitch2);
-  Joystick.setButton(11, funDial1);
-  Joystick.setButton(12, funDial2);
-  Joystick.setButton(13, funDial3);
+  joystick.setButton(9, missileSwitch1);
+  joystick.setButton(10, missileSwitch2);
+  joystick.setButton(11, funDial1);
+  joystick.setButton(12, funDial2);
+  joystick.setButton(13, funDial3);
 
+  // Read encoders
   int enc1_val = enc1.readAndReset() / 4;
   int enc2_val = enc2.readAndReset() / 4;
 
   circle1_r = constrain(circle1_r + enc1_val, 1, 30);
   circle2_r = constrain(circle2_r + enc2_val, 1, 30);
+
+  // Read the joystick output from the Driver Station
+  int32_t dsMessage = readJoystickOutput();
+  if (dsMessage >= 0) {
+    handleDriverStationMessage(dsMessage);
+  }
 
   display.clearDisplay();
   display.drawCircle(32, 32, circle1_r, SH110X_WHITE);
@@ -223,5 +268,31 @@ void loop() {
   // Joystick.setXAxisRotation(enc1.read());
   // Joystick.setYAxisRotation(enc2.read());
 
-  delay(50);
+  joystick.sendState();
+}
+
+#define TIME_LOOP 0
+
+#if TIME_LOOP
+unsigned long loopCount = 0;
+unsigned long timeBegin = micros();
+#endif
+
+void loop() {
+  tick();
+#if TIME_LOOP
+  loopCount++;
+  unsigned long timeEnd = micros();
+  unsigned long totalDuration = timeEnd - timeBegin;
+  if (totalDuration >= 1000000) {
+    Serial.print("Loops per second: ");
+    Serial.print(loopCount);
+    Serial.print(", time per loop: ");
+    double timePerLoopMs = (totalDuration / 1000.0 / loopCount);
+    Serial.print(timePerLoopMs);
+    Serial.println("ms");
+    loopCount = 0;
+    timeBegin = timeEnd;
+  }
+#endif
 }
