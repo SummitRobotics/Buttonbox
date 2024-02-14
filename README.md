@@ -1,6 +1,15 @@
 # Buttonbox
 ## installation
-* From Arduino IDE, go to Sketch / Include Library / Add ZIP Library... and select the libraries\JoystickWithDSOutputs.zip.
+* From Arduino IDE, go to Sketch / Include Library / Add ZIP Library... and install all the .zip files from `libraries/` directory.
+
+** All the libraries, except `JoystickWithDSOutputs.zip`, can also be installed through the Arduino Library Manager. Following are the versions provided in the .zip files:
+
+- Adafruit BusIO - 1.15.0
+- Adafruit GFX Library - 1.11.9
+- Adafruit SH110X - 2.1.10
+- Encoder - 1.4.4
+- FastLED - 3.6.0 (used for light strips and not buttonbox)
+- JoystickWithDSOutputs - packaged from https://github.com/ohowe1/LeonardoWithDSOutputs
 
 ## Buttonbox Message Type
 
