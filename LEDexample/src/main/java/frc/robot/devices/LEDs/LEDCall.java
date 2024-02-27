@@ -4,7 +4,7 @@ import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
-import frc.robot.devices.PCM;
+// import frc.robot.devices.PCM;
 import frc.robot.utilities.RollingAverage;
 
 /**
@@ -199,44 +199,44 @@ public class LEDCall implements LEDHandler {
         };
     }
 
-    /**
-     * Creates a new LEDCall that displays pneumatics pressure levels.
-     *
-     * @param pcm The PCM device
-     * @param ascending Whether or not the LED number are in ascending order
-     * @return the modified LEDCall
-     */
-    public LEDCall pressure(PCM pcm, boolean ascending) {
-        return new LEDCall(priority, range) {
-            int maxLED = 0;
-            int minLED = 1000;
+    // /**
+    //  * Creates a new LEDCall that displays pneumatics pressure levels.
+    //  *
+    //  * @param pcm The PCM device
+    //  * @param ascending Whether or not the LED number are in ascending order
+    //  * @return the modified LEDCall
+    //  */
+    // public LEDCall pressure(PCM pcm, boolean ascending) {
+    //     return new LEDCall(priority, range) {
+    //         int maxLED = 0;
+    //         int minLED = 1000;
 
-            RollingAverage averagePressure = new RollingAverage(500, true);
+    //         RollingAverage averagePressure = new RollingAverage(500, true);
 
-            @Override
-            public Color8Bit getColor(int loop, int led) {
+    //         @Override
+    //         public Color8Bit getColor(int loop, int led) {
 
-                if (led > maxLED) {
-                    maxLED = led;
-                }
+    //             if (led > maxLED) {
+    //                 maxLED = led;
+    //             }
 
-                if (led < minLED) {
-                    minLED = led;
-                }
-                averagePressure.update(pcm.getPressure() / 120);
-                double pressure = averagePressure.getAverage();
-                if (ascending) {
-                    return (minLED + (pressure * (maxLED - minLED)) >= led)
-                        ? new Color8Bit(Color.kGreen)
-                        : new Color8Bit(Color.kBlack);
-                } else {
-                    return (maxLED - (pressure * (maxLED - minLED)) <= led)
-                        ? new Color8Bit(Color.kGreen)
-                        : new Color8Bit(Color.kBlack);
-                }
-            }
-        };
-    }
+    //             if (led < minLED) {
+    //                 minLED = led;
+    //             }
+    //             averagePressure.update(pcm.getPressure() / 120);
+    //             double pressure = averagePressure.getAverage();
+    //             if (ascending) {
+    //                 return (minLED + (pressure * (maxLED - minLED)) >= led)
+    //                     ? new Color8Bit(Color.kGreen)
+    //                     : new Color8Bit(Color.kBlack);
+    //             } else {
+    //                 return (maxLED - (pressure * (maxLED - minLED)) <= led)
+    //                     ? new Color8Bit(Color.kGreen)
+    //                     : new Color8Bit(Color.kBlack);
+    //             }
+    //         }
+    //     };
+    // }
 
     /**
      * LEDCall for testing axis priorities.

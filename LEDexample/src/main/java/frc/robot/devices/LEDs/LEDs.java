@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.devices.LEDs.LEDRange.Atomic;
-import frc.robot.utilities.lists.Ports;
+// import frc.robot.utilities.lists.Ports;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -40,10 +40,13 @@ public class LEDs extends SubsystemBase {
      * Creates a new LED management class, based on the robot configuration.
      */
     private LEDs() {
-        ledStrip = new AddressableLED(Ports.LED_PORT);
-        buffer = new AddressableLEDBuffer(Ports.LED_LENGTH);
+        int LED_PORT = 0;
+        int LED_LENGTH = 114;
 
-        ledStrip.setLength(Ports.LED_LENGTH);
+        ledStrip = new AddressableLED(LED_PORT);
+        buffer = new AddressableLEDBuffer(LED_LENGTH);
+
+        ledStrip.setLength(LED_LENGTH);
         ledStrip.start();
 
         calls = new HashMap<>();
