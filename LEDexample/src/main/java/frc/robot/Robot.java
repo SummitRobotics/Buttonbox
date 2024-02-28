@@ -11,12 +11,19 @@ import edu.wpi.first.wpilibj.XboxController;
 /** This is a demo program showing the use of GenericHID's rumble feature. */
 public class Robot extends TimedRobot {
   private final XboxController m_hid = new XboxController(0);
+  
+    
 
+
+  
+
+   
   @Override
   public void autonomousInit() {
     // Turn on rumble at the start of auto
     m_hid.setRumble(RumbleType.kLeftRumble, 1.0);
     m_hid.setRumble(RumbleType.kRightRumble, 1.0);
+    
   }
 
   @Override
