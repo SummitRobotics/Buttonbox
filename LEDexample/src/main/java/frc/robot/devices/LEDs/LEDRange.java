@@ -32,9 +32,9 @@ public enum LEDRange {
      * and they manage their own internal state to update LED colors.
      */
     protected enum Atomic {
-        ArmLeft(0,37),
-        Bar(38, 74),
-        ArmRight(75,113);
+        ArmLeft(0, 3),
+        Bar(4, 7),
+        ArmRight(8, 11);
 
         private final int start;
         private final int end;
@@ -52,7 +52,7 @@ public enum LEDRange {
             this.start = start;
             this.end = end;
 
-            defaultColor = new Color8Bit(Color.kBlack);
+            defaultColor = new Color8Bit(Color.kGreen);
             call = null;
         }
 

@@ -32,7 +32,7 @@ public class LEDCall implements LEDHandler {
         this.priority = priority;
         this.range = range;
 
-        defaultColor = new Color8Bit(Color.kBlack);
+        defaultColor = new Color8Bit(Color.kRed);
 
         startLoop = 0;
     }

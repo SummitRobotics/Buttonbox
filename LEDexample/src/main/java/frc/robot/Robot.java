@@ -4,32 +4,40 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.XboxController;
+
+import frc.robot.devices.LEDs.LEDs;
+import frc.robot.devices.LEDs.LEDCalls;
 
 /** This is a demo program showing the use of GenericHID's rumble feature. */
 public class Robot extends TimedRobot {
-  private final XboxController m_hid = new XboxController(0);
-  
-    
+    // int LED_PORT = 0;
+    // int LED_LENGTH = 12;
+    // AddressableLED ledStrip = new AddressableLED(LED_PORT);
+    // AddressableLEDBuffer buffer = new AddressableLEDBuffer(LED_LENGTH);
 
+  @Override
+  public void robotInit() {
+    LEDCalls.ON.activate();
+    LEDCalls.MO.activate();
+    // for (int i = 0; i < LED_LENGTH; i++) {
+    //   buffer.setRGB(i, 0, 255, 0);
+    // }
+    // ledStrip.setLength(LED_LENGTH);
+    // ledStrip.setData(buffer);
+    // ledStrip.start();
+  }
 
-  
+  @Override
+  public void robotPeriodic() {
+    LEDs.getInstance().periodic();
+  }
 
-   
   @Override
   public void autonomousInit() {
-    // Turn on rumble at the start of auto
-    m_hid.setRumble(RumbleType.kLeftRumble, 1.0);
-    m_hid.setRumble(RumbleType.kRightRumble, 1.0);
-    
   }
 
   @Override
   public void disabledInit() {
-    // Stop the rumble when entering disabled
-    m_hid.setRumble(RumbleType.kLeftRumble, 0.0);
-    m_hid.setRumble(RumbleType.kRightRumble, 0.0);
   }
 }

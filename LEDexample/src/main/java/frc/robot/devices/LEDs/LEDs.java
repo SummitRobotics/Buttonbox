@@ -41,7 +41,7 @@ public class LEDs extends SubsystemBase {
      */
     private LEDs() {
         int LED_PORT = 0;
-        int LED_LENGTH = 114;
+        int LED_LENGTH = 12;
 
         ledStrip = new AddressableLED(LED_PORT);
         buffer = new AddressableLEDBuffer(LED_LENGTH);
@@ -126,6 +126,7 @@ public class LEDs extends SubsystemBase {
 
     @Override
     public void periodic() {
+        System.out.println("LEDs periodic");
         loop++;
 
         // Reassigns call if they have been modified
