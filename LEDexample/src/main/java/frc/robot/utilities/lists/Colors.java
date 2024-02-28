@@ -24,5 +24,7 @@ public class Colors {
     public static final Color8Bit ORANGE = new Color8Bit(255, 20, 0);
     public static final Color8Bit PURPLE = new Color8Bit(100, 0, 170);
     public static final Color8Bit PINK = new Color8Bit(255,0,125);
+
+    public static final Color8Bit CHAOS_THEORY_GREEN = new Color8Bit(0x14, 0xc6, 0x00);
     // add more as we make them
 }

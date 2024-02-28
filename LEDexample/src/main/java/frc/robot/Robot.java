@@ -16,10 +16,13 @@ public class Robot extends TimedRobot {
     // AddressableLED ledStrip = new AddressableLED(LED_PORT);
     // AddressableLEDBuffer buffer = new AddressableLEDBuffer(LED_LENGTH);
 
+  // NOTE: need amber / blue for tomorrow 
   @Override
   public void robotInit() {
-    LEDCalls.ON.activate();
-    LEDCalls.MO.activate();
+    // LEDCalls.ON.activate();
+    // LEDCalls.INTAKE_DOWN.activate();
+    LEDCalls.AMPLIFY.activate();;
+    // LEDCalls.MO.activate();
     // for (int i = 0; i < LED_LENGTH; i++) {
     //   buffer.setRGB(i, 0, 255, 0);
     // }
