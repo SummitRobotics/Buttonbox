@@ -475,8 +475,15 @@ void tick() {
   // handleDriverStationMessage(message);
   // ///////////////////////////////////////////////////
 
+  static bool onceDirty = false;
+
   // Blit display if dirty
   if (drawState.dirty) {
+    // Clear screen from startup images.
+    if (!onceDirty) {
+      display.fillScreen(COLOR_BLACK);
+      onceDirty = true;
+    }
     display.display();
     drawState.dirty = false;
   }
